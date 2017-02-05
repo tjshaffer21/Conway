@@ -1,4 +1,4 @@
-#! /usr/bin/evn python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # TODO
 #  * Zooming past 0.25 stops shrinking rect.
@@ -6,22 +6,33 @@
 
 """camera.py: Implement and control a camera for the system."""
 
+__version__ = "0.1"
+
 class Camera(object):
 
-    """The Camera class is the class used to render a part of the world onto the
-    screen. """
+    """The Camera class is the class used to view a subsection of the
+       world/tilemap on screen.
+
+    Public Attributes:
+      viewport - List. The viewable portion of the camera.
+      position - List. The location of the Top-Left corner of the 
+                          camera.
+             x - Int. The x value (Top) of the position.
+             y - Int. The y value (Left) of the position.
+          zoom - Float. The magnified view percentage between 0.0 and 1.0.
+    """
 
     def __init__(self, pos=[0,0], viewport=[100,100], zoom=1.0):
         """Initialize the Camera class.
 
-        Args
+        Parameters
           pos - List; The position [x,y] of the camera in screen coordinates.
           viewport - List; The viewport [w,h] of the camera.
           zoom - Float; Percentage of zoom where 1.0 is normal.
         """
-        self._pos = pos
-        self._viewport = viewport
-        self._zoom = zoom
+        self.__pos = pos
+        self.__viewport = viewport
+        self.__zoom = zoom
 
     @property
     def viewport(self):
@@ -30,7 +41,7 @@ class Camera(object):
         Return
           list
         """
-        return self._viewport
+        return self.__viewport
 
     @property
     def position(self):
@@ -39,7 +50,7 @@ class Camera(object):
         Return
           list
         """
-        return self._pos
+        return self.__pos
     
     @property
     def x(self):
@@ -48,16 +59,16 @@ class Camera(object):
         Return
           int
         """
-        return self._pos[0]
+        return self.__pos[0]
 
     @x.setter
     def x(self, value):
         """Set the new x position for the camera.
 
-        Args
+        Parameters
           value - Float
         """
-        self._pos[0] = value
+        self.__pos[0] = value
 
     @property
     def y(self):
@@ -66,16 +77,16 @@ class Camera(object):
         Return
           int
         """
-        return self._pos[1]
+        return self.__pos[1]
 
     @y.setter
     def y(self, value):
         """Set the new y position for the camera.
 
-        Args
+        Parameters
           value - Float
         """
-        self._pos[1] = value
+        self.__pos[1] = value
 
     @property
     def zoom(self):
@@ -84,29 +95,29 @@ class Camera(object):
         Return
           Float
         """
-        return self._zoom
+        return self.__zoom
 
     @zoom.setter
     def zoom(self, value):
         """Set the zoom percentage.
 
-        Args
+        Parameters
           value - Float
         """
-        self._zoom = value
+        self.__zoom = value
 
     def move(self, value):
         """Move the camera to a new location.
 
-        Args
+        Parameters
           value - List; The new location of the camera [x,y].
         """
-        self._pos = loc
+        self.__pos = loc
 
     def resize(self, value):
         """Resize the viewport of the camera.
 
-        Args
+        Parameters
           value - List; The new viewport of the camera [w,h].
         """
-        self._viewport = value
+        self.__viewport = value

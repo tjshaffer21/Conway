@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # TODO
-#  * Texture storage and usage
-#  * Chunk implementation
 #  * Tile scaling
 #  * Fix graphical bugs.
 #  * Smoother camera movement for TileMap's render function.
-#  * TODO comments within TileMap's render function.
+# TODO v. 0.2
+#  * Texture storage and usage.
+#  * Chunk implementation
 
 """tilemap.py: Create and manage the tile map for pygame system."""
 
@@ -14,42 +14,51 @@ __version__ = "0.1"
 
 class Tile(object):
 
-    """The Tile class holds information for each tile of a tile map."""
+    """The Tile class holds information for each tile of a tile map.
+
+    Public Attributes
+      color - List. The RGBA values to associate with a Tile.
+      texture - Int. An ID key for the texture.
+    """
     
     def __init__(self, color = [255,255,255,0], texture_id = 0):
         """Initialize the class.
 
-        Args
-          color - List of RGBA values.
-          texture_id - Integer
+        Parameters
+               color - List. RGBA values for the Tile.
+          texture_id - Int. ID key for the texture.
         """
-        self._color = color
-        self._texture = texture_id
+        self.__color = color
+        self.__texture = texture_id
 
     @property
     def color(self):
         """Return list."""
-        return self._color
+        return self.__color
 
     @color.setter
     def color(self, value):
         """Set the color to value.
         
-        Args
+        Parameters
           value - List of RGBA values.
         """
-        self._color = value
+        self.__color = value
 
     @property
     def texture(self):
-        "Return int"
-        return self._texture
+        """Get the texture ID.
+        
+        Return
+          int
+        """
+        return self.__texture
 
     @texture.setter
     def texture(self, value):
         """Set the texture to value.
 
-        Args
+        Parameters
           value - Integer
         """
         self._texture = value
@@ -60,22 +69,33 @@ class TileMap(object):
     """TileMap is a data structure containing tiles to for a map.
 
     The TileMap is divided up into a number of chunks each of a given width and
-    height, and each tile is of equal size."""
+    height, and each tile is of equal size.
+
+    Public Attribues
+          tile_size - List. The width and height of a Tile.
+         tile_width - Int. The width of a Tile.
+        tile_height - Int. The height of a Tile.
+         chunk_size - List. The width and hight of a chunk.
+        chunk_width - Int. The width of a chunk.
+       chunk_height - Int. The height of a chunk.
+      current_chunk - Int. The current "active" (centered) chunk. For convience,
+                      the chunks are 1-based rather than 0-based.
+    """
 
     def __init__(self, width, height, num_chunks=1, tile_size=[32,32]):
         """Initialize the class.
 
-        Args
-          width - Integer. The width of a chunk in the tile map.
-          height - Integer. The height of a chunk in the tile map.
+        Parameters
+               width - Integer. The width of a chunk in the tile map.
+              height - Integer. The height of a chunk in the tile map.
           num_chunks - Integer. The number of chunks in the tile map.
-          tile_size - List of Integers. The size of a Tile in the tile map.
+           tile_size - List of Integers. The size of a Tile in the tile map.
         """
-        self._tile_size = tile_size
-        self._current_chunk = 1
-        self._total_chunks = num_chunks
-        self._chunk_size = [width, height]
-        self._map = [[[Tile() for x in range(width)] for y in range(height)]
+        self.__tile_size = tile_size
+        self.__current_chunk = 1
+        self.__total_chunks = num_chunks
+        self.__chunk_size = [width, height]
+        self.__map = [[[Tile() for x in range(width)] for y in range(height)]
                      for z in range(num_chunks)]
 
     @property
@@ -83,9 +103,9 @@ class TileMap(object):
         """Return the size of the tiles.
         
         Return
-          List
+          list
         """
-        return self._tile_size
+        return self.__tile_size
 
     @property
     def tile_width(self):
@@ -94,7 +114,7 @@ class TileMap(object):
         Return
           int
         """
-        return self._tile_size[0]
+        return self.__tile_size[0]
 
     @property
     def tile_height(self):
@@ -103,7 +123,7 @@ class TileMap(object):
         Return
           int
         """
-        return self._tile_size[1]
+        return self.__tile_size[1]
 
     @property
     def chunk_size(self):
@@ -112,7 +132,7 @@ class TileMap(object):
         Return
           list
         """
-        return self._chunk_size
+        return self.__chunk_size
 
     @property
     def chunk_width(self):
@@ -121,7 +141,7 @@ class TileMap(object):
         Return
           int
         """
-        return self._chunk_size[0]
+        return self.__chunk_size[0]
 
     @property
     def chunk_height(self):
@@ -130,7 +150,7 @@ class TileMap(object):
         Return
           int
         """
-        return self._chunk_size[1]
+        return self.__chunk_size[1]
 
     @property
     def current_chunk(self):
@@ -139,51 +159,58 @@ class TileMap(object):
         Return
           int
         """
-        return self._current_chunk
+        return self.__current_chunk
 
     @current_chunk.setter
     def current_chunk(self, value):
         """Change the chunk that is being focused on.
 
-        Args
+        Parameters
           value - Integer
         """
-        self._current_chunk = value
+        self.__current_chunk = value
 
     def get_current_chunk(self):
         """Return the current chunk.
         
         Return
-          List
+          list
         """
-        return self._map[self._current_chunk-1]
+        return self.__map[self.__current_chunk-1]
 
     def get_chunk(self, chunk):
         """Return the specified chunk.
 
         Return
-          List
+          list
         """
-        if chunk <= 0 or chunk > self._total_chunks:
+        if chunk <= 0 or chunk > self.__total_chunks:
             return None
 
-        return self._map[chunk-1]
+        return self.__map[chunk-1]
+
+    def screen_to_world(self, screen_coord, cam_coord):
+        """Convert screen coordinates into world coordinates.
+
+        Parameters
+          screen_coord - List; screen coordinates to convert.
+             cam_coord - List; camera coordinates.
+        Return
+          list
+        """
+        return [screen_coord[0] - cam_coord[0], screen_coord[1] - cam_coord[1]]
 
     def render(self, surface, cam):
         """Render the world onto the screen.
 
-        Args
-          surface - SDL_Surface; The surface to work with.
-          cam     - Camera; The camera in which everything is rendered.
-        """
-        # TODO - This can be removed as a function is complexity isn't added later.
-        def screen_to_world(coordinates, cam_coordinates):
-            return [coordinates[0] - cam_coordinates[0],
-                    coordinates[1] - cam_coordinates[1]]
+        The surface parameter is modifed by the function.
 
+        Parameters
+          surface - SDL_Surface; The surface to work with.
+              cam - Camera; The camera in which everything is rendered.
+        """
         chunk = self.get_current_chunk()
         for x in range(cam.x, cam.viewport[0], 32):
-            # Don't bother to continue if x is not on screen.
             if x < 0 or x > surface.get_width():
                 continue
 
@@ -193,8 +220,20 @@ class TileMap(object):
 
                 if x_tile >= 0 and x_tile < self.chunk_width \
                    and y_tile >= 0 and y_tile < self.chunk_height:
-                    # TODO - This can be removed for small gain.
-                    wc = screen_to_world([x, y], cam.position)
+                    wc = self.screen_to_world([x, y], cam.position)
+                    tl_x = wc[0] * cam.zoom
+                    tl_y = wc[1] * cam.zoom
+                    w = self.tile_width
+                    h = self.tile_height
+
+                    if x + self.tile_width > cam.viewport[0]:
+                        w = x - cam.viewport[0]
+                    if y + self.tile_height > cam.viewport[1]:
+                        h = y - cam.viewport[1]
+                    if x + self.tile_width >= cam.viewport[0] and \
+                       y + self.tile_height >= cam.viewport[1]:
+                        w = x - cam.viewport[0]
+                        h = y - cam.viewport[1]
                     surface.fill(chunk[y_tile][x_tile].color,
-                                 [wc[0] * cam.zoom, wc[1] * cam.zoom,
-                                  self.tile_width, self.tile_height])
+                                 [tl_x, tl_y, w, h])
+              

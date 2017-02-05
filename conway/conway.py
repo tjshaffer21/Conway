@@ -1,61 +1,134 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+# TODO v. 0.2
+#  * [1] Continue improving game engine parts.
+#  * [3] Remove camera viewport indicator
+#  * [1] Check that the rules are implemented properly.
+#  * [1] BUG - Check 4 vertical.
+#  * [2] Halt when total extinction occurs.
+#  * [2] Overlay generation count.
+# TODO v. 0.3
+#  * [2] Improve the colorization function.
+#  * [2] Improve the seed function
+#  * [3] Commandline arguments.
 
 """conway.py: Implementation of Conway's Game of Life."""
 
-__version__ = "0.1"
+__version__ = "0.2"
 
 import pygame, sys, random
 import tilemap, camera
 
-# TODO - This information can be handled in a better fashion.
-SCREEN_SIZE = (800, 600)
-GRID_WIDTH = 25
-GRID_HEIGHT = 25
+class State(object):
 
-# TODO - Delete camera movement; not necessary for final version.
-# TODO - Improve seed algorithm.
-# TODO - Keep track of conway generations.
-# TODO - Overlay the generation count.
-# TODO - Halt loop when total extinction occurs.
-# TODO - 4 vertical repeats in similar fashion as 3 vertical.
-def main():
+    """Class to hold the state of the environment.
+    
+    Public Attributes
+            width - Int. The width of the conway system.
+           height - Int. The height of the conway system.
+           conway - List. The conway system.
+      generations - Int. Number of generations that have passed.
+          tilemap - TileMap. The TileMap used for renderng.
+           camera - Camera. The Camera used in conjunction with the TileMap.
+    """
+
+    def __init__(self, conway_width, conway_height):
+        """Initialize the State.
+
+        Parameters
+           conway_width - Int; the width for the conway data.
+          conway_height - Int; the height for the conway data.
+        """
+        self.__width = conway_width
+        self.__height = conway_height
+        
+        self.__conway = self.seed()
+        self.__generations = 1
+        
+        self.__world = tilemap.TileMap(conway_width, conway_height, 1)
+        self.__camera = camera.Camera([0,0],
+                                      [pygame.display.get_surface().get_width(),
+                                       pygame.display.get_surface().get_height()])
+        colorize(self.conway, self.__world)
+
+    @property
+    def width(self):
+        """Get the width of the conway system.
+
+        Return
+          int
+        """
+        return self.__width
+
+    @property
+    def height(self):
+        """Get the height of the conway system.
+
+        Return
+          int
+        """
+        return self.__height
+
+    @property
+    def conway(self):
+        """Get the conway data
+
+        Return
+          list
+        """
+        return self.__conway
+
+    @property
+    def generations(self):
+        """Get the number of generations that have passed.
+
+        Return
+          int
+        """
+        return self.__generations
+
+    @property
+    def tilemap(self):
+        """Get the tilemap for the system.
+
+        Return
+          TileMap
+        """
+        return self.__world
+
+    @property
+    def camera(self):
+        """Get the camera for the system.
+        
+        Return
+          Camera
+        """
+        return self.__camera
+
+    # TODO - Improve seed algorithm.
+    def seed(self):
+        """Create the initial environment."""
+        return [[round(random.random()) for x in range(self.__width)]
+                for y in range(self.__height)]
+
+    def add_generation(self):
+        """Add a generation to the generation counter."""
+        self.__generations = self.__generations + 1
+
+    
+def main(screen_size=[800,600], conway_size=[25,25]):
     # Setup pygame
     pygame.init()
-    screen = pygame.display.set_mode(SCREEN_SIZE, pygame.RESIZABLE)
+    screen = pygame.display.set_mode(screen_size, pygame.RESIZABLE)
     pygame.font.Font('freesansbold.ttf', 18)
     pygame.display.set_caption('Conway')
 
-    # Setup Conway
-    # Remove this if a more sophisticated seed isn't created.
-    def seed_conway(width, height):
-        """Create the environemtn and seed it."""
-        return [[round(random.random()) for x in range(width)]
-                 for y in range(height)]
+    state = State(conway_size[0], conway_size[1])
 
-    def colorize(grid, color_grid):
-        """Set the color-grid to random colors based on grid values.
-
-        Args
-          grid - 2D list of 0 or 1.
-          color_grid - 2D list of Tiles.
-        Return
-          Modified color_grid.
-        """
-        for x in range(0, len(grid)):
-            for y in range(0, len(grid[x])):
-                if grid[x][y] == 0:
-                    color_grid[x][y].color = [0,0,0]
-                else:
-                    color_grid[x][y].color = [int(random.random() * 100),
-                                              int(random.random() * 100),
-                                              int(random.random() * 100)]
-        return color_grid
-    
-    cam = camera.Camera([0, 0], SCREEN_SIZE)
-    grid = tilemap.TileMap(GRID_WIDTH, GRID_HEIGHT, 1)
-    conway = seed_conway(GRID_WIDTH, GRID_HEIGHT)
-    chunk = colorize(conway, grid.get_current_chunk())
+    def update():
+        conway_iteration(state.conway)
+        colorize(state.conway, state.tilemap)
+        state.add_generation()
 
     running = True
     loop = False
@@ -67,37 +140,34 @@ def main():
             elif event.type == pygame.VIDEORESIZE:
                 screen = pygame.display.set_mode((event.w, event.h),
                                                  pygame.RESIZABLE)
-            elif pygame.key.get_pressed()[pygame.K_LEFT] != 0:
-                cam.x = cam.x + 10
-            elif pygame.key.get_pressed()[pygame.K_RIGHT] != 0:
-                cam.x = cam.x - 10
-            elif pygame.key.get_pressed()[pygame.K_UP] != 0:
-                cam.y = cam.y + 10
-            elif pygame.key.get_pressed()[pygame.K_DOWN] != 0:
-                cam.y = cam.y - 10
-            elif pygame.key.get_pressed()[pygame.K_a] != 0:
-                cam.zoom = cam.zoom + 0.25
-            elif pygame.key.get_pressed()[pygame.K_s] != 0:
-                cam.zoom = cam.zoom - 0.25
             elif pygame.key.get_pressed()[pygame.K_RETURN] != 0:
-                colorize(conway_iteration(conway), chunk)
+                if not loop: # Disable when auto is active.
+                    update()
             elif pygame.key.get_pressed()[pygame.K_SPACE] != 0:
-                if loop == False:
+                if not loop:
                     loop = True
                     pygame.time.set_timer(pygame.USEREVENT+1, 1000)
                 else:
                     loop = False
-                    pygame.time.set_time(pygame.USEREVENT+1, 0)
+                    pygame.time.set_timer(pygame.USEREVENT+1, 0)
+
+                update()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
             elif event.type == pygame.USEREVENT+1:
-                if loop == True:
-                    colorize(conway_iteration(conway), chunk)
+                if loop:
+                    update()
 
         screen.fill([0, 0, 0]) # Clear Screen
 
-        grid.render(screen, cam)
+        state.tilemap.render(screen, state.camera)
+        pygame.draw.lines(screen, [255,255,255], True,
+                          [(state.camera.x, state.camera.y),
+                           (state.camera.viewport[0], state.camera.y),
+                           (state.camera.viewport[0], state.camera.viewport[1]),
+                           (state.camera.x, state.camera.viewport[1]),
+                           (state.camera.x, state.camera.y)],3)
         pygame.display.update()
 
     pygame.quit()
@@ -109,9 +179,9 @@ def conway_iteration(conway):
     An iteration is one full sweep of the environment where all cells are
     changed "simultaneously".
 
-    The passed list is modified by the function.
+    Modifies the conway parameter.
 
-    Args
+    Parameers
       conway - List; the list that holds the data for conway.
     Return
       List
@@ -122,7 +192,7 @@ def conway_iteration(conway):
         Alive is defined as currently living (1) or dying (-1); where dying
         indicates a temporary indicator.
 
-        Args
+        Parameters
           x - Int; Row in conway.
           y - Int; Col in conway.
         Return
@@ -133,7 +203,7 @@ def conway_iteration(conway):
     def num_neighbors(x,y):
         """Return the number of neighbors.
         
-        Args:
+        Parameters
           x - Int; Row in conway
           y - Int; Col in conway
         Return
@@ -192,6 +262,24 @@ def conway_iteration(conway):
 
     return conway
             
+def colorize(conway, color_grid):
+    """Sets colors for the conway system.
 
+    Modifies the color_grid parameter.
+
+    Parameters
+          conway - List holding conway environment
+      color_grid - List holding color environment.
+    """
+    for x in range(0, len(conway)):
+        for y in range(0, len(conway[x])):
+            if conway[x][y] == 0:
+                color_grid.get_current_chunk()[x][y].color = [0,0,0]
+            else:
+                color_grid.get_current_chunk()[x][y].color = \
+                    [int(random.random() * 100), int(random.random() * 100),
+                     int(random.random() * 100)]
+
+                    
 if __name__ == "__main__":
-    main()
+    main([800,600],[25,25])
