@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # TODO v. 0.2
 #  * [1] Continue improving game engine parts.
-#  * [3] Remove camera viewport indicator
 #  * [1] Check that the rules are implemented properly.
 #  * [1] BUG - Check 4 vertical.
 #  * [1] BUG - Living shows more cells than are actually seen;

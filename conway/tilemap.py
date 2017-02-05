@@ -7,6 +7,7 @@
 # TODO v. 0.2
 #  * Texture storage and usage.
 #  * Chunk implementation
+#  * Raise exceptions where applicable.
 
 """tilemap.py: Create and manage the tile map for pygame system."""
 
@@ -61,7 +62,7 @@ class Tile(object):
         Parameters
           value - Integer
         """
-        self._texture = value
+        self.__texture = value
 
 
 class TileMap(object):
@@ -165,9 +166,16 @@ class TileMap(object):
     def current_chunk(self, value):
         """Change the chunk that is being focused on.
 
+        Chunks are 1-based so value must be [1, __total_chunks].
+
         Parameters
           value - Integer
+        Error
+          ValueError
         """
+        if value <= 0 or value > self.__total_chunks:
+            raise ValueError(str(value) + " outside of chunk range.")
+        
         self.__current_chunk = value
 
     def get_current_chunk(self):

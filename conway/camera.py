@@ -3,6 +3,7 @@
 # TODO
 #  * Zooming past 0.25 stops shrinking rect.
 #  * Zooming past 1.0 adds gaps between tiles
+#  * Raise exceptions where applicable.
 
 """camera.py: Implement and control a camera for the system."""
 
@@ -113,7 +114,7 @@ class Camera(object):
         Parameters
           value - List; The new location of the camera [x,y].
         """
-        self.__pos = loc
+        self.__pos = value
 
     def resize(self, value):
         """Resize the viewport of the camera.
