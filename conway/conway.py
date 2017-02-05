@@ -5,8 +5,7 @@
 #  * [3] Remove camera viewport indicator
 #  * [1] Check that the rules are implemented properly.
 #  * [1] BUG - Check 4 vertical.
-#  * [2] Halt when total extinction occurs.
-#  * [2] Overlay generation count.
+#  * [1] BUG - Living shows more cells than are actually seen;
 # TODO v. 0.3
 #  * [2] Improve the colorization function.
 #  * [2] Improve the seed function
@@ -44,6 +43,7 @@ class State(object):
         
         self.__conway = self.seed()
         self.__generations = 1
+        self.__living = 0 # TODO - This should be checked.
         
         self.__world = tilemap.TileMap(conway_width, conway_height, 1)
         self.__camera = camera.Camera([0,0],
@@ -88,6 +88,24 @@ class State(object):
         return self.__generations
 
     @property
+    def living(self):
+        """Get the number of living cells.
+
+        Return
+          int
+        """
+        return self.__living
+
+    @living.setter
+    def living(self, value):
+        """Set the number of living cells.
+
+        Parameters
+          value - Int.
+        """
+        self.__living = value
+
+    @property
     def tilemap(self):
         """Get the tilemap for the system.
 
@@ -120,19 +138,26 @@ def main(screen_size=[800,600], conway_size=[25,25]):
     # Setup pygame
     pygame.init()
     screen = pygame.display.set_mode(screen_size, pygame.RESIZABLE)
-    pygame.font.Font('freesansbold.ttf', 18)
+    font = pygame.font.Font('freesansbold.ttf', 18)
     pygame.display.set_caption('Conway')
 
     state = State(conway_size[0], conway_size[1])
 
     def update():
-        conway_iteration(state.conway)
+        """Update the conway system.
+
+        Return
+          Int - The number of living cells.
+        """
+        living = conway_iteration(state.conway)
         colorize(state.conway, state.tilemap)
         state.add_generation()
 
+        return living
+
     running = True
     loop = False
-    last_time = pygame.time.get_ticks()
+    living = 0 # TODO - Should actually check this.
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -151,23 +176,27 @@ def main(screen_size=[800,600], conway_size=[25,25]):
                     loop = False
                     pygame.time.set_timer(pygame.USEREVENT+1, 0)
 
-                update()
+                state.living = update()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
             elif event.type == pygame.USEREVENT+1:
                 if loop:
-                    update()
+                    state.living = update()
 
-        screen.fill([0, 0, 0]) # Clear Screen
+        if state.living == 0:
+            loop = False
 
+        # Rendering
+        screen.fill([0, 0, 0])
         state.tilemap.render(screen, state.camera)
-        pygame.draw.lines(screen, [255,255,255], True,
-                          [(state.camera.x, state.camera.y),
-                           (state.camera.viewport[0], state.camera.y),
-                           (state.camera.viewport[0], state.camera.viewport[1]),
-                           (state.camera.x, state.camera.viewport[1]),
-                           (state.camera.x, state.camera.y)],3)
+
+        gen_text = "Generations: " + str(state.generations)
+        screen.blit(font.render(gen_text, 1, [255, 255, 255]), [0,0])
+
+        screen.blit(font.render("Living: " + str(state.living), 1,
+                                [255, 255, 255]), [len(gen_text) * 10, 0])
+        
         pygame.display.update()
 
     pygame.quit()
@@ -179,12 +208,12 @@ def conway_iteration(conway):
     An iteration is one full sweep of the environment where all cells are
     changed "simultaneously".
 
-    Modifies the conway parameter.
-
     Parameers
       conway - List; the list that holds the data for conway.
+    Modified Arguments
+      conway
     Return
-      List
+      Int - The number of living cells.
     """
     def alive(x,y):
         """Check if a cell is alive.
@@ -213,35 +242,35 @@ def conway_iteration(conway):
 
         if x > 0:
             if alive(x-1, y):
-                value = value + 1
+                value += 1
 
         if x < len(conway)-1:
             if alive(x+1, y):
-                value = value + 1
+                value += 1
 
         if y > 0:
             if alive(x, y-1):
-                value = value + 1
+                value += 1
 
         if y < len(conway[x])-1:
             if alive(x, y+1):
-                value = value + 1
+                value += 1
 
         if x > 0 and y > 0:
             if alive(x-1, y-1):
-                value = value + 1
+                value += 1
 
         if x < len(conway)-1 and y > 0:
             if alive(x+1, y-1):
-                value = value + 1
+                value += 1
 
         if x < len(conway)-1 and y < len(conway[x])-1:
             if alive(x+1, y+1):
-                value = value + 1
+                value += 1
 
         if x > 0 and y < len(conway[x])-1:
             if alive(x-1, y+1):
-                value = value + 1                    
+                value += 1                    
                     
         return value
 
@@ -253,23 +282,27 @@ def conway_iteration(conway):
             elif not alive(x,y) and num_neighbors(x,y) == 3:
                 conway[x][y] = 2
 
+    living = 0
     for x in range(0, len(conway)):
         for y in range(0, len(conway[x])):
             if conway[x][y] == -1:
                 conway[x][y] = 0
             elif conway[x][y] == 2:
                 conway[x][y] = 1
+                living += 1
+            elif conway[x][y] == 1:
+                living += 1
 
-    return conway
+    return living
             
 def colorize(conway, color_grid):
     """Sets colors for the conway system.
 
-    Modifies the color_grid parameter.
-
     Parameters
           conway - List holding conway environment
       color_grid - List holding color environment.
+    Modified Arugments
+      color_grid
     """
     for x in range(0, len(conway)):
         for y in range(0, len(conway[x])):

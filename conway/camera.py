@@ -16,7 +16,7 @@ class Camera(object):
     Public Attributes:
       viewport - List. The viewable portion of the camera.
       position - List. The location of the Top-Left corner of the 
-                          camera.
+                 camera.
              x - Int. The x value (Top) of the position.
              y - Int. The y value (Left) of the position.
           zoom - Float. The magnified view percentage between 0.0 and 1.0.
@@ -26,9 +26,10 @@ class Camera(object):
         """Initialize the Camera class.
 
         Parameters
-          pos - List; The position [x,y] of the camera in screen coordinates.
+               pos - List; The position [x,y] of the camera in screen
+                     coordinates.
           viewport - List; The viewport [w,h] of the camera.
-          zoom - Float; Percentage of zoom where 1.0 is normal.
+              zoom - Float; Percentage of zoom where 1.0 is normal.
         """
         self.__pos = pos
         self.__viewport = viewport
@@ -93,7 +94,7 @@ class Camera(object):
         """Return the zoom percentage.
 
         Return
-          Float
+          float
         """
         return self.__zoom
 
