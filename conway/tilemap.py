@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# TODO
-#  * Tile scaling
-#  * Fix graphical bugs.
-#  * Smoother camera movement for TileMap's render function.
-# TODO v. 0.2
-#  * Texture storage and usage.
-#  * Chunk implementation
-#  * Raise exceptions where applicable.
 
 """tilemap.py: Create and manage the tile map for pygame system."""
 
@@ -211,18 +203,18 @@ class TileMap(object):
     def render(self, surface, cam):
         """Render the world onto the screen.
 
-        The surface parameter is modifed by the function.
-
         Parameters
           surface - SDL_Surface; The surface to work with.
               cam - Camera; The camera in which everything is rendered.
+        Modified Arguments
+          surface
         """
         chunk = self.get_current_chunk()
-        for x in range(cam.x, cam.viewport[0], 32):
+        for x in range(cam.x, cam.viewport[0], self.tile_width):
             if x < 0 or x > surface.get_width():
                 continue
 
-            for y in range(cam.y, cam.viewport[1], 32):
+            for y in range(cam.y, cam.viewport[1], self.tile_height):
                 x_tile = int(x / self.tile_width)
                 y_tile = int(y / self.tile_height)
 

@@ -1,0 +1,30 @@
+conway
+------
+
++ General
+  + Continue to improve game engine parts.
+  + Continue to check the rules are correct.
++ V. 0.3
+  + [1] Improve the colorization function.
+  + [1] Improve the seed function
+  + [3] Commandline arguments.
+
+camera
+------
+
++ General
+  + Raise exceptions where applicable.
+  + [2] Allow zooming in.
+    + Requires Tile Scaling
++ V. 0.2
+  + [1] Rendered objects should be centered in the viewport.
+
+tilemap
+-------
+
++ General
+  + Raise exceptions where applicable.
++ V. 0.2
+  + Texture storage and usage
+  + Chunk implementation
+  + Tile Scaling

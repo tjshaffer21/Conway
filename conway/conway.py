@@ -1,14 +1,5 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-# TODO v. 0.2
-#  * [1] Continue improving game engine parts.
-#  * [1] Check that the rules are implemented properly.
-#  * [1] BUG - Check 4 vertical.
-#  * [1] BUG - Living shows more cells than are actually seen;
-# TODO v. 0.3
-#  * [2] Improve the colorization function.
-#  * [2] Improve the seed function
-#  * [3] Commandline arguments.
 
 """conway.py: Implementation of Conway's Game of Life."""
 
@@ -30,21 +21,26 @@ class State(object):
            camera - Camera. The Camera used in conjunction with the TileMap.
     """
 
-    def __init__(self, conway_width, conway_height):
+    def __init__(self, conway_width, conway_height, tile_size=[32,32]):
         """Initialize the State.
 
         Parameters
            conway_width - Int; the width for the conway data.
           conway_height - Int; the height for the conway data.
+              tile_size - List; the tile size for the TileMap
         """
         self.__width = conway_width
         self.__height = conway_height
         
         self.__conway = self.seed()
         self.__generations = 1
-        self.__living = 0 # TODO - This should be checked.
+        self.__living = 0
         
-        self.__world = tilemap.TileMap(conway_width, conway_height, 1)
+        for i in self.__conway:
+            self.__living += i.count(1)
+        
+        self.__world = tilemap.TileMap(conway_width, conway_height, 1,
+                                       tile_size)
         self.__camera = camera.Camera([0,0],
                                       [pygame.display.get_surface().get_width(),
                                        pygame.display.get_surface().get_height()])
@@ -122,7 +118,6 @@ class State(object):
         """
         return self.__camera
 
-    # TODO - Improve seed algorithm.
     def seed(self):
         """Create the initial environment."""
         return [[round(random.random()) for x in range(self.__width)]
@@ -133,14 +128,14 @@ class State(object):
         self.__generations = self.__generations + 1
 
     
-def main(screen_size=[800,600], conway_size=[25,25]):
+def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
     # Setup pygame
     pygame.init()
     screen = pygame.display.set_mode(screen_size, pygame.RESIZABLE)
     font = pygame.font.Font('freesansbold.ttf', 18)
     pygame.display.set_caption('Conway')
 
-    state = State(conway_size[0], conway_size[1])
+    state = State(conway_size[0], conway_size[1], tile_size)
 
     def update():
         """Update the conway system.
@@ -156,7 +151,6 @@ def main(screen_size=[800,600], conway_size=[25,25]):
 
     running = True
     loop = False
-    living = 0 # TODO - Should actually check this.
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -164,21 +158,20 @@ def main(screen_size=[800,600], conway_size=[25,25]):
             elif event.type == pygame.VIDEORESIZE:
                 screen = pygame.display.set_mode((event.w, event.h),
                                                  pygame.RESIZABLE)
-            elif pygame.key.get_pressed()[pygame.K_RETURN] != 0:
-                if not loop: # Disable when auto is active.
-                    update()
-            elif pygame.key.get_pressed()[pygame.K_SPACE] != 0:
-                if not loop:
-                    loop = True
-                    pygame.time.set_timer(pygame.USEREVENT+1, 1000)
-                else:
-                    loop = False
-                    pygame.time.set_timer(pygame.USEREVENT+1, 0)
-
-                state.living = update()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.key == pygame.K_RETURN:
+                    if not loop: # Disable when auto is active
+                        state.living = update()
+                elif event.key == pygame.K_SPACE:
+                    if not loop:
+                        loop = True
+                        pygame.time.set_timer(pygame.USEREVENT+1, 1000)
+                    else:
+                        loop = False
+                        pygame.time.set_timer(pygame.USEREVENT+1, 0)
+                    state.living = update()
             elif event.type == pygame.USEREVENT+1:
                 if loop:
                     state.living = update()
@@ -194,7 +187,7 @@ def main(screen_size=[800,600], conway_size=[25,25]):
         screen.blit(font.render(gen_text, 1, [255, 255, 255]), [0,0])
 
         screen.blit(font.render("Living: " + str(state.living), 1,
-                                [255, 255, 255]), [len(gen_text) * 10, 0])
+                                [255, 255, 255]), [len(gen_text) * 20, 0])
         
         pygame.display.update()
 
@@ -281,6 +274,8 @@ def conway_iteration(conway):
             elif not alive(x,y) and num_neighbors(x,y) == 3:
                 conway[x][y] = 2
 
+    # Check for number of living cells while flipping the cells to their proper
+    # states.
     living = 0
     for x in range(0, len(conway)):
         for y in range(0, len(conway[x])):
@@ -314,4 +309,4 @@ def colorize(conway, color_grid):
 
                     
 if __name__ == "__main__":
-    main([800,600],[25,25])
+    main([800,600],[10,10],[100,100])
