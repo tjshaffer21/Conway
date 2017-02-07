@@ -19,7 +19,7 @@ class Camera(object):
           zoom - Float. The magnified view percentage between 0.0 and 1.0.
     """
 
-    def __init__(self, pos=[0,0], viewport=[100,100], zoom=1.0):
+    def __init__(self, pos=[0,0], viewport=[100,100], zoom=1.0, offset=[0,0]):
         """Initialize the Camera class.
 
         Parameters
@@ -27,10 +27,31 @@ class Camera(object):
                      coordinates.
           viewport - List; The viewport [w,h] of the camera.
               zoom - Float; Percentage of zoom where 1.0 is normal.
+            offset - List. An offset amout for where the camera actually starts
+                     being rendered.
         """
         self.__pos = pos
         self.__viewport = viewport
         self.__zoom = zoom
+        self.__offset = offset
+
+    @property
+    def offset(self):
+        """Return the offset for the camera.
+       
+        Return
+          list
+        """
+        return self.__offset
+
+    @offset.setter
+    def offset(self, value):
+        """Set the offset for the camera.
+
+        Parameters
+          value - List
+        """
+        self.__offset = value
 
     @property
     def viewport(self):

@@ -337,6 +337,7 @@ def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
     pygame.display.set_caption('Conway')
 
     state = State(conway_size[0], conway_size[1], tile_size)
+    state.camera.offset = [0,20]
 
     running = True
     loop = False
@@ -347,6 +348,7 @@ def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
             elif event.type == pygame.VIDEORESIZE:
                 screen = pygame.display.set_mode((event.w, event.h),
                                                  pygame.RESIZABLE)
+                state.camera.resize([event.w, event.h])
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
@@ -400,13 +402,10 @@ if __name__ == "__main__":
 
     # Adjust tile size
     tile_x = 32
-    while conway[0] * tile_x > window[0] and tile_x > 1:
-        tile_x = tile_x / 2
-
     tile_y = 32
-    while conway[1] * tile_y > window[1] and tile_y > 1:
+    while (conway[0] * tile_x > window[0] or conway[1] * tile_y > window[1]) \
+           and tile_x > 16:
+        tile_x = tile_x / 2
         tile_y = tile_y / 2
-
-    print(tile_x)
 
     main([window[0],window[1]],[int(tile_x),int(tile_y)],[conway[0],conway[1]])

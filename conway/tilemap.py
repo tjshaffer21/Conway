@@ -221,8 +221,8 @@ class TileMap(object):
                 if x_tile >= 0 and x_tile < self.chunk_width \
                    and y_tile >= 0 and y_tile < self.chunk_height:
                     wc = self.screen_to_world([x, y], cam.position)
-                    tl_x = wc[0] * cam.zoom
-                    tl_y = wc[1] * cam.zoom
+                    tl_x = (wc[0] * cam.zoom) + cam.offset[0]
+                    tl_y = (wc[1] * cam.zoom) + cam.offset[1]
                     w = self.tile_width
                     h = self.tile_height
 
@@ -236,4 +236,3 @@ class TileMap(object):
                         h = y - cam.viewport[1]
                     surface.fill(chunk[y_tile][x_tile].color,
                                  [tl_x, tl_y, w, h])
-              
