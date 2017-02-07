@@ -39,12 +39,18 @@ class State(object):
         for i in self.__conway:
             self.__living += i.count(1)
         
-        self.__world = tilemap.TileMap(conway_width, conway_height, 1,
+        self.__world = tilemap.TileMap(self.__width, self.__height, 1,
                                        tile_size)
         self.__camera = camera.Camera([0,0],
                                       [pygame.display.get_surface().get_width(),
                                        pygame.display.get_surface().get_height()])
-        colorize(self.conway, self.__world)
+
+        for x in range(0, self.__width):
+            for y in range(0, self.__height):
+                if self.__conway[y][x] == 0:
+                    self.__world.get_current_chunk()[y][x].color = [0,0,0]
+                else:
+                    self.__world.get_current_chunk()[y][x].color = [150,0,0]
 
     @property
     def width(self):
@@ -125,7 +131,7 @@ class State(object):
 
     def add_generation(self):
         """Add a generation to the generation counter."""
-        self.__generations = self.__generations + 1
+        self.__generations += 1
 
     
 def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
@@ -138,16 +144,10 @@ def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
     state = State(conway_size[0], conway_size[1], tile_size)
 
     def update():
-        """Update the conway system.
-
-        Return
-          Int - The number of living cells.
-        """
-        living = conway_iteration(state.conway)
+        """Update the conway system."""
+        state.living = conway_iteration(state.conway)
         colorize(state.conway, state.tilemap)
         state.add_generation()
-
-        return living
 
     running = True
     loop = False
@@ -163,7 +163,7 @@ def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
                     running = False
                 elif event.key == pygame.K_RETURN:
                     if not loop: # Disable when auto is active
-                        state.living = update()
+                        update()
                 elif event.key == pygame.K_SPACE:
                     if not loop:
                         loop = True
@@ -171,10 +171,10 @@ def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
                     else:
                         loop = False
                         pygame.time.set_timer(pygame.USEREVENT+1, 0)
-                    state.living = update()
+                    update()
             elif event.type == pygame.USEREVENT+1:
                 if loop:
-                    state.living = update()
+                    update()
 
         if state.living == 0:
             loop = False
@@ -300,13 +300,22 @@ def colorize(conway, color_grid):
     """
     for x in range(0, len(conway)):
         for y in range(0, len(conway[x])):
+            current = color_grid.get_current_chunk
             if conway[x][y] == 0:
-                color_grid.get_current_chunk()[x][y].color = [0,0,0]
+                current()[x][y].color = [0,0,0]
             else:
-                color_grid.get_current_chunk()[x][y].color = \
-                    [int(random.random() * 100), int(random.random() * 100),
-                     int(random.random() * 100)]
+                if current()[x][y].color == [0,0,0]:
+                    # Red is set to 150 so that the living cell does not blend
+                    # into the background much.
+                    current()[x][y].color = [150, 0, 0]
+                else:
+                    if current()[x][y].color[0] < 255:
+                        current()[x][y].color[0] += 1
+                    elif current()[x][y].color[1] < 255:
+                        current()[x][y].color[1] += 1
+                    elif current()[x][y].color[2] < 255:
+                        current()[x][y].color[2] += 1
 
                     
 if __name__ == "__main__":
-    main([800,600],[10,10],[100,100])
+    main([800,600],[10,10],[80,60])
