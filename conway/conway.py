@@ -5,7 +5,7 @@
 
 __version__ = "0.2"
 
-import pygame, sys, random
+import pygame, sys, random, argparse
 import tilemap, camera
 
 class State(object):
@@ -32,7 +32,7 @@ class State(object):
         self.__width = conway_width
         self.__height = conway_height
         
-        self.__conway = self.seed()
+        self.__conway = seed(self.__width, self.height)
         self.__generations = 1
         self.__living = 0
         
@@ -124,75 +124,38 @@ class State(object):
         """
         return self.__camera
 
-    def seed(self):
-        """Create the initial environment."""
-        return [[round(random.random()) for x in range(self.__width)]
-                for y in range(self.__height)]
-
     def add_generation(self):
         """Add a generation to the generation counter."""
         self.__generations += 1
 
-    
-def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
-    # Setup pygame
-    pygame.init()
-    screen = pygame.display.set_mode(screen_size, pygame.RESIZABLE)
-    font = pygame.font.Font('freesansbold.ttf', 18)
-    pygame.display.set_caption('Conway')
 
-    state = State(conway_size[0], conway_size[1], tile_size)
 
-    def update():
-        """Update the conway system."""
-        state.living = conway_iteration(state.conway)
-        colorize(state.conway, state.tilemap)
-        state.add_generation()
+def colorize(conway, color_grid):
+    """Sets colors for the conway system.
 
-    running = True
-    loop = False
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.VIDEORESIZE:
-                screen = pygame.display.set_mode((event.w, event.h),
-                                                 pygame.RESIZABLE)
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    running = False
-                elif event.key == pygame.K_RETURN:
-                    if not loop: # Disable when auto is active
-                        update()
-                elif event.key == pygame.K_SPACE:
-                    if not loop:
-                        loop = True
-                        pygame.time.set_timer(pygame.USEREVENT+1, 1000)
-                    else:
-                        loop = False
-                        pygame.time.set_timer(pygame.USEREVENT+1, 0)
-                    update()
-            elif event.type == pygame.USEREVENT+1:
-                if loop:
-                    update()
-
-        if state.living == 0:
-            loop = False
-
-        # Rendering
-        screen.fill([0, 0, 0])
-        state.tilemap.render(screen, state.camera)
-
-        gen_text = "Generations: " + str(state.generations)
-        screen.blit(font.render(gen_text, 1, [255, 255, 255]), [0,0])
-
-        screen.blit(font.render("Living: " + str(state.living), 1,
-                                [255, 255, 255]), [len(gen_text) * 20, 0])
-        
-        pygame.display.update()
-
-    pygame.quit()
-    sys.exit()
+    Parameters
+          conway - List holding conway environment
+      color_grid - List holding color environment.
+    Modified Arugments
+      color_grid
+    """
+    for x in range(0, len(conway)):
+        for y in range(0, len(conway[x])):
+            current = color_grid.get_current_chunk
+            if conway[x][y] == 0:
+                current()[x][y].color = [0,0,0]
+            else:
+                if current()[x][y].color == [0,0,0]:
+                    # Red is set to 150 so that the living cell does not blend
+                    # into the background much.
+                    current()[x][y].color = [150, 0, 0]
+                else:
+                    if current()[x][y].color[0] < 255:
+                        current()[x][y].color[0] += 1
+                    elif current()[x][y].color[1] < 255:
+                        current()[x][y].color[1] += 1
+                    elif current()[x][y].color[2] < 255:
+                        current()[x][y].color[2] += 1
 
 def conway_iteration(conway):
     """One interation for conway.
@@ -288,34 +251,162 @@ def conway_iteration(conway):
                 living += 1
 
     return living
-            
-def colorize(conway, color_grid):
-    """Sets colors for the conway system.
+
+def seed(width, height):
+    """Create the initial environment.
 
     Parameters
-          conway - List holding conway environment
-      color_grid - List holding color environment.
-    Modified Arugments
-      color_grid
+       width - Int. The width of the environment.
+      height - Int. The height of the environment.
+    Return
+      list
     """
-    for x in range(0, len(conway)):
-        for y in range(0, len(conway[x])):
-            current = color_grid.get_current_chunk
-            if conway[x][y] == 0:
-                current()[x][y].color = [0,0,0]
-            else:
-                if current()[x][y].color == [0,0,0]:
-                    # Red is set to 150 so that the living cell does not blend
-                    # into the background much.
-                    current()[x][y].color = [150, 0, 0]
-                else:
-                    if current()[x][y].color[0] < 255:
-                        current()[x][y].color[0] += 1
-                    elif current()[x][y].color[1] < 255:
-                        current()[x][y].color[1] += 1
-                    elif current()[x][y].color[2] < 255:
-                        current()[x][y].color[2] += 1
+    def get_neighbors(x, y):
+        """Get the neighbors of (x,y).
+
+        Parameters
+          x - Int
+          y - Int
+        Return
+          list
+        """
+        neighbors = []
+
+        if x > 0:
+            neighbors.append([x-1,y])
+
+        if x < width-1:
+            neighbors.append([x+1,y])
+
+        if y > 0:
+            neighbors.append([x,y-1])
+
+        if y < height-1:
+            neighbors.append([x,y+1])
+
+        if x > 0 and y > 0:
+            neighbors.append([x-1,y-1])
+
+        if x < width-1 and y < height-1:
+            neighbors.append([x+1,y+1])
+
+        return neighbors
+        
+    seeds = [[random.random() for x in range(width)]
+             for y in range(height)]
+
+    # For each cell, get the neighbors.
+    # If the neighbor's value is <= 0.5 then remove else
+    # if random value is < 0 remove.
+    for x in range(0, width):
+        for y in range(0, height):
+            neighbors = get_neighbors(x,y)
+
+            for i in neighbors:
+                if seeds[i[1]][i[0]] < seeds[y][x]:
+                    if seeds[i[1]][i[0]] <= 0.5:
+                        seeds[i[1]][i[0]] = 0
+                    elif random.random() < 0.5:
+                        seeds[i[1]][i[0]] = 0
+
+    # Final environment should only be 0 or 1.
+    for x in range(0, len(seeds)):
+        for y in range(0, len(seeds[x])):
+            seeds[x][y] = round(seeds[x][y])
+
+    return seeds
+
+def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
+    """Main execution point
+
+    Parameters
+      screen_size - List. The size of the screen.
+        tile_size - List. The size of Tiles.
+      conway_size - List. The size of the conway environment.
+    """
+    def update():
+        """Update the conway system."""
+        state.living = conway_iteration(state.conway)
+        colorize(state.conway, state.tilemap)
+        state.add_generation()
+
+    # Setup pygame
+    pygame.init()
+    screen = pygame.display.set_mode(screen_size, pygame.RESIZABLE)
+    font = pygame.font.Font('freesansbold.ttf', 18)
+    pygame.display.set_caption('Conway')
+
+    state = State(conway_size[0], conway_size[1], tile_size)
+
+    running = True
+    loop = False
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.VIDEORESIZE:
+                screen = pygame.display.set_mode((event.w, event.h),
+                                                 pygame.RESIZABLE)
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                elif event.key == pygame.K_RETURN:
+                    if not loop: # Disable when auto is active
+                        update()
+                elif event.key == pygame.K_SPACE:
+                    if not loop:
+                        loop = True
+                        pygame.time.set_timer(pygame.USEREVENT+1, 1000)
+                    else:
+                        loop = False
+                        pygame.time.set_timer(pygame.USEREVENT+1, 0)
+                    update()
+            elif event.type == pygame.USEREVENT+1:
+                if loop:
+                    update()
+
+        if state.living == 0:
+            loop = False
+
+        # Rendering
+        screen.fill([0, 0, 0])
+        state.tilemap.render(screen, state.camera)
+
+        gen_text = "Generations: " + str(state.generations)
+        screen.blit(font.render(gen_text, 1, [255, 255, 255]), [0,0])
+
+        screen.blit(font.render("Living: " + str(state.living), 1,
+                                [255, 255, 255]), [len(gen_text) * 20, 0])
+        
+        pygame.display.update()
+
+    pygame.quit()
+    sys.exit()
 
                     
 if __name__ == "__main__":
-    main([800,600],[10,10],[80,60])
+    parser = argparse.ArgumentParser(description='Run Conway\'s Game of Life.')
+    parser.add_argument('-w', help='Window Size [width,height]')
+    parser.add_argument('-c', help='Conway Size [width,height]')
+
+    args = parser.parse_args()
+    window = args.w.split(',')
+    conway = args.c.split(',')
+
+    conway[0] = int(conway[0])
+    conway[1] = int(conway[1])
+    window[0] = int(window[0])
+    window[1] = int(window[1])
+
+    # Adjust tile size
+    tile_x = 32
+    while conway[0] * tile_x > window[0] and tile_x > 1:
+        tile_x = tile_x / 2
+
+    tile_y = 32
+    while conway[1] * tile_y > window[1] and tile_y > 1:
+        tile_y = tile_y / 2
+
+    print(tile_x)
+
+    main([window[0],window[1]],[int(tile_x),int(tile_y)],[conway[0],conway[1]])
