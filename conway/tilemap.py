@@ -64,7 +64,7 @@ class TileMap(object):
     The TileMap is divided up into a number of chunks each of a given width and
     height, and each tile is of equal size.
 
-    Public Attribues
+    Public Attributes
           tile_size - List. The width and height of a Tile.
          tile_width - Int. The width of a Tile.
         tile_height - Int. The height of a Tile.
@@ -170,6 +170,14 @@ class TileMap(object):
         
         self.__current_chunk = value
 
+    def get_center(self):
+        """Return the coordinates of the center point.
+
+        Return
+          list
+        """
+        return [self.__chunk_size[0] / 2, self.__chunk_size[1] / 2]
+        
     def get_current_chunk(self):
         """Return the current chunk.
         
@@ -189,17 +197,6 @@ class TileMap(object):
 
         return self.__map[chunk-1]
 
-    def screen_to_world(self, screen_coord, cam_coord):
-        """Convert screen coordinates into world coordinates.
-
-        Parameters
-          screen_coord - List; screen coordinates to convert.
-             cam_coord - List; camera coordinates.
-        Return
-          list
-        """
-        return [screen_coord[0] - cam_coord[0], screen_coord[1] - cam_coord[1]]
-
     def render(self, surface, cam):
         """Render the world onto the screen.
 
@@ -211,8 +208,8 @@ class TileMap(object):
         """
         chunk = self.get_current_chunk()
         for x in range(cam.x, cam.viewport[0], self.tile_width):
-            if x < 0 or x > surface.get_width():
-                continue
+            #if x < 0 or x > surface.get_width():
+            #    continue
 
             for y in range(cam.y, cam.viewport[1], self.tile_height):
                 x_tile = int(x / self.tile_width)
@@ -220,7 +217,7 @@ class TileMap(object):
 
                 if x_tile >= 0 and x_tile < self.chunk_width \
                    and y_tile >= 0 and y_tile < self.chunk_height:
-                    wc = self.screen_to_world([x, y], cam.position)
+                    wc = screen_to_world([x, y], cam.position)
                     tl_x = (wc[0] * cam.zoom) + cam.offset[0]
                     tl_y = (wc[1] * cam.zoom) + cam.offset[1]
                     w = self.tile_width
@@ -236,3 +233,15 @@ class TileMap(object):
                         h = y - cam.viewport[1]
                     surface.fill(chunk[y_tile][x_tile].color,
                                  [tl_x, tl_y, w, h])
+
+
+def screen_to_world(screen_coord, cam_coord):
+    """Convert screen coordinates into world coordinates.
+
+    Parameters
+      screen_coord - List; screen coordinates to convert.
+         cam_coord - List; camera coordinates.
+    Return
+      list
+    """
+    return [screen_coord[0] - cam_coord[0], screen_coord[1] - cam_coord[1]]

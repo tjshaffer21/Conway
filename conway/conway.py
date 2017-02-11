@@ -3,7 +3,7 @@
 
 """conway.py: Implementation of Conway's Game of Life."""
 
-__version__ = "0.2"
+__version__ = "1.0"
 
 import pygame, sys, random, argparse
 import tilemap, camera
@@ -337,7 +337,6 @@ def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
     pygame.display.set_caption('Conway')
 
     state = State(conway_size[0], conway_size[1], tile_size)
-    state.camera.offset = [0,20]
 
     running = True
     loop = False
@@ -349,6 +348,11 @@ def main(screen_size=[800,600], tile_size=[32,32], conway_size=[25,25]):
                 screen = pygame.display.set_mode((event.w, event.h),
                                                  pygame.RESIZABLE)
                 state.camera.resize([event.w, event.h])
+
+                if event.w <= 800:
+                    state.camera.offset = [event.w / 8, 20]
+                else:
+                    state.camera.offset = [event.w / 4, 20]
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
@@ -403,9 +407,24 @@ if __name__ == "__main__":
     # Adjust tile size
     tile_x = 32
     tile_y = 32
-    while (conway[0] * tile_x > window[0] or conway[1] * tile_y > window[1]) \
-           and tile_x > 16:
-        tile_x = tile_x / 2
-        tile_y = tile_y / 2
+
+    width = conway[0] * tile_x
+    height = conway[1] * tile_y
+    if width < window[0] or height < window[1]:
+        # Tiles are going to be square so only one check for limit.
+        while (width < window[0] and height < window[1]) and tile_x < 64:
+            tile_x = tile_x * 2
+            tile_y = tile_y * 2
+
+            width = conway[0] * tile_x
+            height = conway[1] * tile_y
+    elif width > window[0] or height > window[1]:
+        # Tiles are going to be square so only one check for limit.
+        while (width > window[0] and height > window[1]) and tile_x > 4:
+            tile_x = tile_x / 4
+            tile_y = tile_y / 4
+
+            width = conway[0] * tile_x
+            height = conway[1] * tile_y
 
     main([window[0],window[1]],[int(tile_x),int(tile_y)],[conway[0],conway[1]])
