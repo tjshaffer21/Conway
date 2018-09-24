@@ -2,24 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import conway
-from conway import tilemap
-
-class TestTileMethods(unittest.TestCase):
-
-    def test_set_color(self):
-        tile = tilemap.Tile()
-        tile.color = [0, 0, 0, 0]
-        self.assertEqual(tile.color, [0, 0, 0, 0], "incorrect color")
-
-    def test_set_texture(self):
-        tile = tilemap.Tile()
-        tile.texture = 2415
-        self.assertEqual(tile.texture, 2415, "incorrect id")
-
+from conway.tiles import tilemap, tile
 
 class TestTileMapMethods(unittest.TestCase):
-
     def setUp(self):
         self.tilemap = tilemap.TileMap(10, 10, 2)
 
@@ -40,6 +25,6 @@ class TestTileMapMethods(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.tilemap.current_chunk = 3
 
-            
+
 if __name__ == '__main__':
     unittest.main()
