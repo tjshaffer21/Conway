@@ -10,24 +10,6 @@ from ui import container, label
 BLACK = pygame.Color('black')
 WHITE = pygame.Color('white')
 
-def conway_update(state, tilemap):
-    """Update the conway state.
-
-    Post:
-        state is modified
-        tilemap is modified.
-
-    Args:
-        state (conway.State): The conway state
-    Returns:
-        conway.State
-    """
-    state.living = conway.conway_iteration(state.conway)
-    conway.colorize(state.conway, tilemap)
-    state.add_generation()
-
-    return (state, tilemap)
-
 # Handle commandline options.
 parser = argparse.ArgumentParser(description='Run Conway\'s Game of Life.')
 parser.add_argument('-w', help='Window Size [width,height]')
@@ -65,7 +47,7 @@ elif width > window[0] or height > window[1]:
         height = cw[1] * tile_size
 
 # Setup and configure Pygame.
-sm = system_manager.SystemManager([window[0], window[1]], pygame.RESIZABLE, "Conway")
+sm = system_manager.SystemManager((window[0], window[1]), pygame.RESIZABLE, "Conway")
 sm.add_font("freesansbold", pygame.font.Font('freesansbold.ttf', 18))
 font = sm.get_font("freesansbold")
 
@@ -75,22 +57,22 @@ camera = camera.Camera([0, 0], [window[0], yw_offset])
 
 # Setup and configure Conway state.
 cw_state = conway.State(cw[0], cw[1])
-tm = tilemap.TileMap(cw[0], cw[1], 1, [int(tile_size), int(tile_size)], pygame.Color(150,0,0,0))
+tm = tilemap.TileMap(cw[0], cw[1], 1, (int(tile_size), int(tile_size)), conway.living_cell)
 conway.colorize(cw_state.conway, tm)
 
 # Create UI
-ui_container = container.SurfaceContainer([0, 0, window[0], conway_offset])
-cw_container = container.SurfaceContainer([0, conway_offset, window[0], yw_offset])
+ui_container = container.SurfaceContainer((0, 0, window[0], conway_offset))
+cw_container = container.SurfaceContainer((0, conway_offset, window[0], yw_offset))
 
-ui_container.add(label.Label("Generations: ", [0,0, 16, 16], font, WHITE, BLACK))
-ui_container.add(label.Label("Living: ", [300, 0, 16, 16], font, WHITE, BLACK))
-ui_container.add(label.Label("FPS: ", [600, 0, 16, 16], font, WHITE, BLACK))
+ui_container.add(label.Label("Generations: ", (0, 0, 16, 16), font, WHITE, BLACK))
+ui_container.add(label.Label("Living: ", (300, 0, 16, 16), font, WHITE, BLACK))
+ui_container.add(label.Label("FPS: ", (600, 0, 16, 16), font, WHITE, BLACK))
 
-gen_label = label.Label(str(cw_state.generations), [125, 0, 16, 16], font,
+gen_label = label.Label(str(cw_state.generations), (125, 0, 16, 16), font,
                         WHITE, BLACK)
-liv_label = label.Label(str(cw_state.living), [400, 0, 16, 16], font,
+liv_label = label.Label(str(cw_state.living), (400, 0, 16, 16), font,
                         WHITE, BLACK)
-fps_label = label.Label(str(sm.clock.get_fps()), [650, 0, 16, 16], font,
+fps_label = label.Label(str(sm.clock.get_fps()), (650, 0, 16, 16), font,
                         WHITE, BLACK)
 
 ui_container.add(gen_label)
@@ -106,13 +88,13 @@ while sm.running:
             sm.running = False
         elif event.type == pygame.VIDEORESIZE:
             sm.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-            camera.resize([event.w, event.h])
+            camera.resize((event.w, event.h))
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 sm.running = False
             elif event.key == pygame.K_RETURN:
                 if not loop:
-                    conway_update(cw_state, tm)
+                    conway.update(cw_state, tm)
             elif event.key == pygame.K_SPACE:
                 if not loop:
                     loop = True
@@ -120,10 +102,10 @@ while sm.running:
                 else:
                     loop = False
                     pygame.time.set_timer(pygame.USEREVENT+1, 0)
-                conway_update(cw_state, tm)
+                conway.update(cw_state, tm)
         elif event.type == pygame.USEREVENT+1:
             if loop:
-                conway_update(cw_state, tm)
+                conway.update(cw_state, tm)
 
     if cw_state.living == 0:
         loop = False
